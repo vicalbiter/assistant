@@ -185,14 +185,14 @@ suggest_diagnostic(Posibilities, PrevDiagnostic, [Action|Diagnostic]) :-
 	suggest_diagnostic(NewPos, [Action|PrevDiagnostic], Diagnostic).
 
 % Build a feasible diagnostic, given the robot's knowledge of the world
-clean_diagnostic(Posibilities, Observations, Ideal, Diagnostic) :-
+clean_diagnostic(Posibilities, Observations, Ideal, TDiagnostic) :-
 	suggest_diagnostic(Posibilities, [], Diagnostic),
 %	suggest_diagnostics(Posibilities, Diagnostic),
 	last_action_was_move(Diagnostic),
 %	no_placement_inconsistencies(Diagnostic, Ideal),
-%	transform_placement_inconsistencies(Diagnostic, Ideal),
+	transform_placement_inconsistencies(Diagnostic, Ideal, TDiagnostic),
 	build_and_clean_all_observations_lists(Observations, Ideal, 0, OList),
-	are_sublists(OList, Diagnostic).
+	are_sublists(OList, TDiagnostic).
 
 
 
@@ -234,6 +234,26 @@ get_shelf_id(X, [_, _, Shelf3], 3) :-
 %------------------------------------
 % Diagnostic transformation
 %------------------------------------
+
+% Transform all placement inconsistencies from a Diagnostic (i.e. if the diagnostic contains an action place(X) but the shelf of X is incorrect, transform that action into misplace(X)
+transform_placement_inconsistencies(Diagnostic, Ideal, TD) :-
+	transform_diagnostic(Diagnostic, DGF),
+	transform_diagnosed_actions(Diagnostic, Ideal, DGF, TD).
+
+transform_diagnosed_actions([], _, _, []).
+transform_diagnosed_actions([A|T], Ideal, DGF, [TA|TD]) :-
+	transform_diagnosed_action(A, Ideal, DGF, TA),
+	transform_diagnosed_actions(T, Ideal, DGF, TD).
+
+transform_diagnosed_action(place(X), Ideal, DGF, place(X)) :-
+	get_shelf_id(X, Ideal, IdealID),
+	get_shelf_id(X, DGF, IdealID).
+transform_diagnosed_action(place(X), Ideal, DGF, misplace(X)) :-
+	get_shelf_id(X, Ideal, IdealID),
+	get_shelf_id(X, DGF, DiagnosedID),
+	different_ids(IdealID, DiagnosedID).
+transform_diagnosed_action(move(X), _, _, move(X)).
+
 
 % Transform all the actions inside a diagnostic
 
