@@ -53,25 +53,25 @@ are_sublists([X|T], List) :-
 
 % pick_action_or_move
 pick_action_or_move([place(X)|_], place(X)).
-pick_action_or_move([misplace(X)|_], misplace(X)).
+%pick_action_or_move([misplace(X)|_], misplace(X)).
 pick_action_or_move([move(X)|_], move(X)).
 pick_action_or_move([_|T], Action) :-
 	pick_action_or_move(T, Action).
 
 % pick_action
 pick_action([place(X)|_], place(X)).
-pick_action([misplace(X)|_], misplace(X)).
+%pick_action([misplace(X)|_], misplace(X)).
 pick_action([_|T], Action) :-
 	pick_action(T, Action).
 
 % Eliminate an action from the list of posibilities
 eliminate_action_from_posibilities(_, [], []).
 eliminate_action_from_posibilities(place(X), S, NewS) :-
-	delete_element(place(X), S, S1),
-	delete_element(misplace(X), S1, NewS).
-eliminate_action_from_posibilities(misplace(X), S, NewS) :-
-	delete_element(place(X), S, S1),
-	delete_element(misplace(X), S1, NewS).
+	delete_element(place(X), S, NewS).
+%	delete_element(misplace(X), S1, NewS).
+%eliminate_action_from_posibilities(misplace(X), S, NewS) :-
+%	delete_element(place(X), S, S1),
+%	delete_element(misplace(X), S1, NewS).
 eliminate_action_from_posibilities(move(X), S, NewS) :-
 	delete_element(move(X), S, NewS).
 
@@ -90,11 +90,11 @@ legal_action(Action, Posibilities, [LA|PD]) :-
 
 % Validate if an action is valid, given a list of actions that have already been done until now
 validate(place(X), PrevDiagnostic) :-
-	not(member_of(place(X), PrevDiagnostic)),
-	not(member_of(misplace(X), PrevDiagnostic)).
-validate(misplace(X), PrevDiagnostic) :-
-	not(member_of(place(X), PrevDiagnostic)),
-	not(member_of(misplace(X), PrevDiagnostic)).
+	not(member_of(place(X), PrevDiagnostic)).
+%	not(member_of(misplace(X), PrevDiagnostic)).
+%validate(misplace(X), PrevDiagnostic) :-
+%	not(member_of(place(X), PrevDiagnostic)),
+%	not(member_of(misplace(X), PrevDiagnostic)).
 validate(move(X), PrevDiagnostic) :-
 	not(member_of(move(X), PrevDiagnostic)).
 
@@ -189,7 +189,8 @@ clean_diagnostic(Posibilities, Observations, Ideal, Diagnostic) :-
 	suggest_diagnostic(Posibilities, [], Diagnostic),
 %	suggest_diagnostics(Posibilities, Diagnostic),
 	last_action_was_move(Diagnostic),
-	no_placement_inconsistencies(Diagnostic, Ideal),
+%	no_placement_inconsistencies(Diagnostic, Ideal),
+%	transform_placement_inconsistencies(Diagnostic, Ideal),
 	build_and_clean_all_observations_lists(Observations, Ideal, 0, OList),
 	are_sublists(OList, Diagnostic).
 
@@ -233,6 +234,8 @@ get_shelf_id(X, [_, _, Shelf3], 3) :-
 %------------------------------------
 % Diagnostic transformation
 %------------------------------------
+
+% Transform all the actions inside a diagnostic
 
 transform_diagnostic(D, DGF) :-
 	transform_diagnostic_normal_form(D, DNF),
