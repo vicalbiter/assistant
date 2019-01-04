@@ -135,6 +135,35 @@ count_misplaced_items([misplace(_)|Diagnostic], X) :-
 count_misplaced_items([_|T], X) :-
 	count_misplaced_items(T, X).
 
+% Only moves left
+only_moves_left([], yes).
+only_moves_left([move(_)|Posibilities], R) :-
+	only_moves_left(Posibilities, R).
+only_moves_left([place(_)|_], no).
+only_moves_left([misplace(_)|_], no).
+
+%suggest_diagnostics
+suggest_diagnostics(Actions, Diagnostic) :-
+	append([move(shelf1), move(shelf2), move(shelf3)], Actions, Pos),
+	suggest_diagnostic(Pos, [], Diagnostic).
+suggest_diagnostics(Actions, Diagnostic) :-
+	append([move(shelf1), move(shelf2)], Actions, Pos),
+	suggest_diagnostic(Pos, [], Diagnostic).
+suggest_diagnostics(Actions, Diagnostic) :-
+	append([move(shelf2), move(shelf3)], Actions, Pos),
+	suggest_diagnostic(Pos, [], Diagnostic).
+suggest_diagnostics(Actions, Diagnostic) :-
+	append([move(shelf1), move(shelf3)], Actions, Pos),
+	suggest_diagnostic(Pos, [], Diagnostic).
+suggest_diagnostics(Actions, Diagnostic) :-
+	append([move(shelf1)], Actions, Pos),
+	suggest_diagnostic(Pos, [], Diagnostic).
+suggest_diagnostics(Actions, Diagnostic) :-
+	append([move(shelf2)], Actions, Pos),
+	suggest_diagnostic(Pos, [], Diagnostic).
+suggest_diagnostics(Actions, Diagnostic) :-
+	append([move(shelf3)], Actions, Pos),
+	suggest_diagnostic(Pos, [], Diagnostic).
 
 %------------------------------------
 % Diagnostic construction
@@ -147,7 +176,9 @@ complete_diagnostic(Posibilities, Observations, Ideal, Diagnostic) :-
 	min_count(LDH, [Diagnostic,_]).
 
 % Suggest a diagnostic, given a list of posible actions and a previous diagnostic (this function generates a feasible path of the diagnostic tree), and it is meant to be called in conjunction with findall/3 in order to get all posible diagnostics.
-suggest_diagnostic([], _, []).
+suggest_diagnostic([], _, []).	% Use this if you want to empty all posibilities before suggesting a diagnostic
+%suggest_diagnostic(Posibilities, _, []) :-
+%	only_moves_left(Posibilities, yes).
 suggest_diagnostic(Posibilities, PrevDiagnostic, [Action|Diagnostic]) :-
 	legal_action(Action, Posibilities, PrevDiagnostic),
 	eliminate_action_from_posibilities(Action, Posibilities, NewPos),
@@ -156,6 +187,7 @@ suggest_diagnostic(Posibilities, PrevDiagnostic, [Action|Diagnostic]) :-
 % Build a feasible diagnostic, given the robot's knowledge of the world
 clean_diagnostic(Posibilities, Observations, Ideal, Diagnostic) :-
 	suggest_diagnostic(Posibilities, [], Diagnostic),
+%	suggest_diagnostics(Posibilities, Diagnostic),
 	last_action_was_move(Diagnostic),
 	no_placement_inconsistencies(Diagnostic, Ideal),
 	build_and_clean_all_observations_lists(Observations, Ideal, 0, OList),
