@@ -1,0 +1,74 @@
+?- Obs = [[beer,coke], [], []], Items = [beer, coke, soup, cookies], Ideal = [[beer,coke],[soup],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[beer, coke], [], []],
+Items = [beer, coke, soup, cookies],
+Ideal = [[beer, coke], [soup], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(beer), place(coke), move(shelf1), place(soup), move(shelf2), place(cookies), move(shelf3)] ;
+false.
+
+?- Obs = [[beer,coke,soup], [], []], Items = [beer, coke, soup, cookies], Ideal = [[beer,coke],[soup],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[beer, coke, soup], [], []],
+Items = [beer, coke, soup, cookies],
+Ideal = [[beer, coke], [soup], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(beer), place(coke), misplace(soup), move(shelf1), place(cookies), move(shelf3)] ;
+false.
+
+?- Obs = [[beer,coke,soup], [], []], Items = [beer, coke, soup, cookies], Ideal = [[beer,coke],[soup],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[beer, coke, soup], [], []],
+Items = [beer, coke, soup, cookies],
+Ideal = [[beer, coke], [soup], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(beer), place(coke), misplace(soup), move(shelf1), place(cookies), move(shelf3)] .
+
+?- Obs = [[beer,coke,soup], [], []], Items = [beer, coke, soup, cookies], Ideal = [[beer,coke],[soup,cereal],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[beer, coke, soup], [], []],
+Items = [beer, coke, soup, cookies],
+Ideal = [[beer, coke], [soup, cereal], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(beer), place(coke), misplace(soup), move(shelf1), place(cookies), move(shelf3)] .
+
+?- Obs = [[beer,coke,soup,cereal], [], []], Items = [beer, coke, soup, cookies,cereal], Ideal = [[beer,coke],[soup,cereal],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[beer, coke, soup, cereal], [], []],
+Items = [beer, coke, soup, cookies, cereal],
+Ideal = [[beer, coke], [soup, cereal], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(beer), place(coke), misplace(soup), misplace(cereal), move(shelf1), place(cookies), move(shelf3)] .
+
+?- Obs = [[beer,coke,soup,cereal,cookies], [], []], Items = [beer, coke, soup, cookies,cereal], Ideal = [[beer,coke],[soup,cereal],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[beer, coke, soup, cereal, cookies], [], []],
+Items = [beer, coke, soup, cookies, cereal],
+Ideal = [[beer, coke], [soup, cereal], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(beer), place(coke), misplace(soup), misplace(cookies), misplace(cereal), move(shelf1)] .
+
+?- Obs = [[beer,soup], [], []], Items = [beer, coke, soup, cookies,cereal], Ideal = [[beer,coke],[soup,cereal],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[beer, soup], [], []],
+Items = [beer, coke, soup, cookies, cereal],
+Ideal = [[beer, coke], [soup, cereal], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(beer), misplace(soup), move(shelf1), place(cereal), move(shelf2), misplace(coke), place(cookies), move(shelf3)] .
+
+?- Obs = [[beer,soup], [], []], Items = [beer, coke, soup, cookies], Ideal = [[beer,coke],[soup,cereal],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[beer, soup], [], []],
+Items = [beer, coke, soup, cookies],
+Ideal = [[beer, coke], [soup, cereal], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(beer), misplace(soup), move(shelf1), misplace(coke), place(cookies), move(shelf3)] .
+
+?- Obs = [[], [], []], Items = [beer, coke, soup, cookies], Ideal = [[beer,coke],[soup,cereal],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[], [], []],
+Items = [beer, coke, soup, cookies],
+Ideal = [[beer, coke], [soup, cereal], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [place(soup), move(shelf2), misplace(beer), misplace(coke), place(cookies), move(shelf3)] .
+
+?- Obs = [[soup,cereal], [], []], Items = [beer, coke, soup, cookies,cereal], Ideal = [[beer,coke],[soup,cereal],[cookies]], ObsShelves = [1,0,0], diagnostic(Items, Ideal, Obs, ObsShelves, D).
+Obs = [[soup, cereal], [], []],
+Items = [beer, coke, soup, cookies, cereal],
+Ideal = [[beer, coke], [soup, cereal], [cookies]],
+ObsShelves = [1, 0, 0],
+D = [misplace(soup), misplace(cereal), move(shelf1), misplace(beer), misplace(coke), place(cookies), move(shelf3)] .
+
+?- 
+
