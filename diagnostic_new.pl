@@ -187,10 +187,10 @@ transformation_gf_to_df_all([GF|ListGF], Ideal, X, [DF|ListDF]) :-
 transformation_gf_to_df_single([], _, X, [move(Shelf)]) :-
 	atom_concat(shelf, X, Shelf).
 transformation_gf_to_df_single([Item|GF], Ideal, X, [place(Item)|DF]) :-
-	get_shelf_id(Item, Ideal, X),
+	get_shelf_id(Item, Ideal, 1, X),
 	transformation_gf_to_df_single(GF, Ideal, X, DF).
 transformation_gf_to_df_single([Item|GF], Ideal, X, [misplace(Item)|DF]) :-
-	get_shelf_id(Item, Ideal, IdealID),
+	get_shelf_id(Item, Ideal, 1, IdealID),
 	different_ids(IdealID, X),
 	transformation_gf_to_df_single(GF, Ideal, X, DF).
 	
@@ -202,16 +202,15 @@ different_ids(ID1, ID2) :-
 different_ids(ID1, ID2) :-
 	ID1 < ID2.
 
-get_shelf_id(X, [Shelf1, _, _], 1) :-
-	member_of(X, Shelf1).
-get_shelf_id(X, [_, Shelf2, _], 2) :-
-	member_of(X, Shelf2).
-get_shelf_id(X, [_, _, Shelf3], 3) :-
-	member_of(X, Shelf3).
-%get_shelf_id(X, [Shelf1,Shelf2,Shelf3], 0) :-
-%	not(member_of(X, Shelf1)),
-%	not(member_of(X, Shelf2)),
-%	not(member_of(X, Shelf3)).
+% get_shelf_id(Item, Shelves, InitialCounter, ID).
+% Gets the shelf ID in which the item is placed, given a list of Shelves (InitialCounter must be always set to 1 when calling this function.
+get_shelf_id(_, [], _, 0).
+get_shelf_id(X, [IShelf|_], ID, ID) :-
+	member_of(X, IShelf).
+get_shelf_id(X, [IShelf|Shelves], CurrentShelf, ID) :-
+	not(member_of(X, IShelf)),
+	NextShelf is CurrentShelf + 1,
+	get_shelf_id(X, Shelves, NextShelf, ID).
 
 % Clean lists (intermediate step between GF to DF transformation)
 clean_lists([], []).
@@ -232,24 +231,24 @@ clean_obs(L, L).
 % General Form: [[Items in shelf1], [Items in shelf2], [Items in shelf3]]
 
 % Build a complete diagnostic
-diagnostic(Items, Ideal, ObsGF, ObsShelves, Diagnostic) :-
-	findall(D, suggest_diagnostic_df_with_obs(Items, Ideal, ObsGF, ObsShelves, D), LD),
+diagnostic(Items, NShelves, Ideal, ObsGF, ObsShelves, Diagnostic) :-
+	findall(D, suggest_diagnostic_df_with_obs(Items, NShelves, Ideal, ObsGF, ObsShelves, D), LD),
 	build_list_of_tuples(LD, LDH),
 	max_count(LDH, [Diagnostic,_]).
 
 % Given a list of items, a list of reported places for those items in GF, a list of observed places for those items in GF, and a list of the shelves that have already been observed, suggest a diagnostic in DF
-suggest_diagnostic_df_with_obs(Items, Ideal, ObsGF, ObsShelves, Diagnostic) :-
-	suggest_diagnostic_gf_with_obs(Items, ObsGF, ObsShelves, DGF),
+suggest_diagnostic_df_with_obs(Items, NShelves, Ideal, ObsGF, ObsShelves, Diagnostic) :-
+	suggest_diagnostic_gf_with_obs(Items, NShelves, ObsGF, ObsShelves, DGF),
 	transformation_gf_to_df(DGF, Ideal, Diagnostic).
 
 % Given a list of items, and a list of reported places for those items in GF, suggest a diagnostic in DF.
-suggest_diagnostic_df(Items, Ideal, Diagnostic) :-
-	suggest_diagnostic_gf(Items, DGF),
+suggest_diagnostic_df(Items, NShelves, Ideal, Diagnostic) :-
+	suggest_diagnostic_gf(Items, NShelves, DGF),
 	transformation_gf_to_df(DGF, Ideal, Diagnostic).
 
 % Given a list of items, a list (GF) of observed items, and a list of the shelves that have already been visited, suggest a diagnostic in general form
-suggest_diagnostic_gf_with_obs(Items, ObsGF, ObsShelves, DiagnosticGF) :-
-	suggest_diagnostic_gf(Items, DiagnosticGF),
+suggest_diagnostic_gf_with_obs(Items, NShelves, ObsGF, ObsShelves, DiagnosticGF) :-
+	suggest_diagnostic_gf(Items, NShelves, DiagnosticGF),
 	matches_observations(ObsGF, ObsShelves, DiagnosticGF).
 
 % Make sure that, if a shelf has been observed (the observations match the diagnostic)
@@ -269,14 +268,20 @@ all_elements_in([X|T], L) :-
 	member_of(X, L),
 	all_elements_in(T, L).
 	
-% Given a list of items, suggest a diagnostic in general form
-suggest_diagnostic_gf(Items, DiagnosticGF) :-
-	generate_list_of_shelves(Items, Shelves),
-	place_items_in_shelf(1, Items, Shelves, ItemsShelf1),
-	place_items_in_shelf(2, Items, Shelves, ItemsShelf2),
-	place_items_in_shelf(3, Items, Shelves, ItemsShelf3),
-	append([ItemsShelf1], [ItemsShelf2], Aux),
-	append(Aux, [ItemsShelf3], DiagnosticGF).
+% suggest_diagnostic_gf(Items, N, DiagnosticGF)
+% Given a list of Items and a number N of shelves, suggest a diagnostic in general form
+suggest_diagnostic_gf(Items, NShelves, DiagnosticGF) :-
+	generate_list_of_items_placement(Items, NShelves, ItemsPlacement),
+	place_items_in_shelves(Items, 1, NShelves, ItemsPlacement, DiagnosticGF).
+
+% Distribute all Items across the N shelves, according to a placement list.
+place_items_in_shelves(Items, NShelves, NShelves, IPlacement, [Shelf]) :-
+	place_items_in_shelf(NShelves, Items, IPlacement, Shelf).
+place_items_in_shelves(Items, CurrentShelfID, NShelves, IPlacement, [Shelf|Shelves]) :-
+	place_items_in_shelf(CurrentShelfID, Items, IPlacement, Shelf),
+	NextShelfID is CurrentShelfID + 1,
+	NextShelfID =< NShelves,
+	place_items_in_shelves(Items, NextShelfID, NShelves, IPlacement, Shelves).
 
 place_items_in_shelf(_, [], [], []).
 place_items_in_shelf(ID, [Item|Items], [ID|Shelves], [Item|Shelf]) :-
@@ -285,17 +290,23 @@ place_items_in_shelf(ID, [_|Items], [OtherID|Shelves], Shelf) :-
 	different_ids(ID, OtherID),
 	place_items_in_shelf(ID, Items, Shelves, Shelf). 
 
-%generate_list(ListOfItems, ListOfShelves)
-% Generation of all list of #Items elements containing numbers between 1 and 3. Each element in this list corresponds to the shelf in which the element in the list of items was placed.
-generate_list_of_shelves([], []).
-generate_list_of_shelves([_|T], [X|TL]) :-
+%generate_list(ListOfItems, N, ListOfShelves)
+% Generation of all list of #Items elements containing numbers between 0 and N. Each element in this list corresponds to the shelf in which the element in the list of items was placed.
+generate_list_of_items_placement([], _, []).
+generate_list_of_items_placement([_|T], NShelves, [X|L]) :-
+	pick_number_less_than(X, NShelves),
+	generate_list_of_items_placement(T, NShelves, L).
+
+pick_number_less_than(X, N) :-
 	pick_number(X),
-	generate_list_of_shelves(T, TL).
+	X =< N.
 
 pick_number(0).	%Item wasn't placed in any shelf
 pick_number(1). %Item was placed in shelf 1
 pick_number(2). %Item was placed in shelf 2
-pick_number(3). %Item was placed in shelf 3
+pick_number(3). %...
+pick_number(4). %...
+pick_number(5). %...
 
 
 
